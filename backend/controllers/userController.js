@@ -3,7 +3,7 @@ const catchAsyncError =  require('../middleware/catchAsyncError');
 const User = require('../models/userModel');
 const sendToken = require('../utils/jwtToken');
 
-//Register a User 
+//REGISTER USER
 exports.registerUser = catchAsyncError( async(req,res,next) => {
     const {name,email,password} = req.body;
     const user = await User.create({
@@ -16,7 +16,8 @@ exports.registerUser = catchAsyncError( async(req,res,next) => {
     sendToken(user, 201 , res);
   
 })
-//LOGIN USER
+
+// LOGIN USER
 exports.loginUser = catchAsyncError(async(req,res,next) => {
     const {email, password} = req.body;
     // checking if user has enter both email and password
@@ -34,4 +35,29 @@ exports.loginUser = catchAsyncError(async(req,res,next) => {
     }
     
     sendToken(user, 200 , res);
+})
+// LOGOUT USER
+exports.logoutUser = catchAsyncError(async(req,res,next) => {
+
+   res.cookie('token',null, {
+    expires: new Date(Date.now()),
+    httpOnly:true
+   });
+    res.status(200).json({
+        success:true,
+        message:"Logged Out Successfully!"
+    });
+})
+// FORGOT PASSWORD
+
+exports.forgotPassword = catchAsyncError(async(req,res,next) => {
+    const user =  await User.findOne({email:req.body.email});
+    if(!user) {
+        return next(new ErrorHandler("user not found", 404));
+    }
+    //Get reset password token
+    const resetToken =  user.getResetPasswordToken();
+    await user.save({validateBeforeSave:false});
+    
+
 })
