@@ -31,8 +31,8 @@ exports.loginUser = catchAsyncError(async(req,res,next) => {
         return next(new ErrorHandler("Invalid email or password",401));
 
     }
-    const isPasswordMatch = user.comparePassword(password);
-    if(!isPasswordMatch){
+    const isPasswordMatched = await user.comparePassword(password);
+    if(!isPasswordMatched){
         return next(new ErrorHandler("Invalid email or password",401));
     }
     
@@ -84,7 +84,7 @@ exports.forgotPassword = catchAsyncError(async(req,res,next) => {
     }
 
 })
-
+// RESET PASSWORD
 exports.resetPassword = catchAsyncError(async(req,res,next) => {
     const resetPasswordToken = crypto
     .createHash("sha256")
@@ -106,4 +106,28 @@ exports.resetPassword = catchAsyncError(async(req,res,next) => {
     user.resetPasswordExpire = undefined ;
     await user.save();
     sendToken(user,200,res);
+});
+ 
+//GET USER DETAILS
+exports.getUserDetails = catchAsyncError(async(req,res,next) => {
+    const user = await User.findById(req.user.id);
+
+    res.status(200).json({
+        success:true,
+        user,
+    });
+});
+//Update or Change user password
+exports.updateUserPassword = catchAsyncError(async(req,res,next) => {
+    const user = await User.findById(req.user.id).select("+password");
+    const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+    if(!isPasswordMatched){
+        return next(new ErrorHandler("Old password is incorrect",401));
+    }
+    if(req.body.newPassword !== req.body.confirmPassword){
+        return next(new ErrorHandler("New Password and confirnPassword does not match", 400));
+    }
+    user.password = req.body.newPassword;
+    await user.save();
+   sendToken(user,200, res);
 });
