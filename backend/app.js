@@ -7,8 +7,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({extended:true}))
 const product = require('./routes/productRoute');
 const user = require('./routes/userRoute');
+const order = require('./routes/orderRoute')
 app.use('/api/v1',product)
 app.use('/api/v1',user)
+app.use('/api/v1' , order);
 //Middleware for error
 app.use(errorMiddleware);
 module.exports=app;
